@@ -2,19 +2,9 @@ import React from 'react'
 import { Card } from 'react-bootstrap'
 import { Link } from 'react-router-dom';
 import Rating from './Rating';
+import { Product } from '../utils/types/product_Type';
 
-type Product = {
-    _id: string;
-    name: string;
-    image: string;
-    description: string;
-    brand: string;
-    category: string;
-    price: number;
-    countInStock: number;
-    rating: number;
-    numReviews: number;
-  };
+
 
   type Props = {
     product: Product
