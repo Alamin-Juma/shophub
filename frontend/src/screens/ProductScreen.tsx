@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import {
@@ -11,8 +11,10 @@ import {
   Form,
 } from "react-bootstrap";
 
-import products from "../utils/products";
+// import products from "../utils/products";
 import Rating from "../components/Rating";
+import axios from "axios";
+import { Product } from "../utils/types/product_Type";
 
 type ProductParams = {
   id: string;
@@ -22,6 +24,27 @@ const ProductScreen = () => {
   const [qty, setQty] = useState(1);
 
   const { id: productId } = useParams<ProductParams>();
+
+
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        console.log('Making request to /api/products...');
+        const { data } = await axios.get('/api/products');
+        console.log('Response from API:', data);
+        setProducts(data);
+      } catch (error: any) {
+        console.error(
+          'Error fetching products:',
+          error.response ? error.response.data : error.message
+        );
+      }
+    };
+  
+    fetchProducts();
+  }, [productId]);
   const product = products.find((p) => p._id === productId);
 
   // If product is not found or is out of stock, disable the button and quantity

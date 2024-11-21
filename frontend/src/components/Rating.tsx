@@ -1,11 +1,7 @@
 import React from "react";
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
+import { RatingProps } from "../utils/types/rating_Type";
 
-type RatingProps = {
-  value: number;
-  color?: string;
-  text?: string;
-};
 
 const Rating: React.FC<RatingProps> = ({
   value,
