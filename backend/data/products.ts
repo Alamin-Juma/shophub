@@ -1,6 +1,5 @@
 const products = [
     {
-      _id: '1',
       name: 'Airpods Wireless Bluetooth Headphones',
       image: '/images/airpods.jpg',
       description:
@@ -13,7 +12,6 @@ const products = [
       numReviews: 12,
     },
     {
-      _id: '2',
       name: 'Amazon Echo Dot (4th Gen)',
       image: '/images/alexa.jpg',
       description:
@@ -26,7 +24,6 @@ const products = [
       numReviews: 50,
     },
     {
-      _id: '3',
       name: 'Sony Camera 4K',
       image: '/images/camera.jpg',
       description:
@@ -39,7 +36,6 @@ const products = [
       numReviews: 18,
     },
     {
-      _id: '4',
       name: 'Logitech Wireless Mouse',
       image: '/images/mouse.jpg',
       description:
@@ -52,7 +48,6 @@ const products = [
       numReviews: 35,
     },
     {
-      _id: '5',
       name: 'iPhone 14 Pro 256GB',
       image: '/images/phone.jpg',
       description:
@@ -65,7 +60,6 @@ const products = [
       numReviews: 25,
     },
     {
-      _id: '6',
       name: 'PlayStation 5 Console',
       image: '/images/playstation.jpg',
       description:

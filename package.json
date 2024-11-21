@@ -7,7 +7,9 @@
     "build": "npx tsc -p backend/",
     "server": "nodemon backend/server.ts",
     "client": "pnpm --prefix frontend dev",
-    "dev": "concurrently \"pnpm run server\" \"pnpm run client\""
+    "dev": "concurrently \"pnpm run server\" \"pnpm run client\"",
+     "data:import": "ts-node backend/seeder.ts",
+    "data:destroy": "ts-node backend/seeder.ts -d"
   },
   "keywords": [],
   "author": "",
