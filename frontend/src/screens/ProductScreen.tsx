@@ -54,7 +54,7 @@ const ProductScreen = () => {
             Go Back
           </Link>
           <Row>
-            <Col md={3}>
+            <Col md={4}>
               <Image src={product?.image} alt={product?.name} fluid />
             </Col>
             <Col md={3}>
@@ -74,7 +74,7 @@ const ProductScreen = () => {
                 </ListGroup.Item>
               </ListGroup>
             </Col>
-            <Col md={3}>
+            <Col md={5}>
               <Card>
                 <ListGroup variant="flush">
                   <ListGroup.Item className="border-bottom">
