@@ -14,17 +14,21 @@ import "./assets/styles/index.css";
 import App from "./App.tsx";
 import HomeScreen from "./screens/HomeScreen.tsx";
 import ProductScreen from "./screens/ProductScreen.tsx";
+import { Provider } from "react-redux";
+import store from "./store.ts" 
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
       <Route index element={<HomeScreen />} />
-      <Route path='/product/:id' element={<ProductScreen />} />
+      <Route path="/product/:id" element={<ProductScreen />} />
     </Route>
   )
 );
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
   </StrictMode>
 );
