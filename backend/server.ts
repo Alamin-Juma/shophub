@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from 'cors';
 import path from 'path'
 import dotenv from 'dotenv'
 import connectDb from './config/db'
@@ -13,6 +14,14 @@ const app = express()
 const _dirname = path.dirname(__filename);
 const PORT: number = Number(process.env.PORT) || 4000;
 
+
+// CORS configuration
+app.use(cors({
+    // or whatever port your frontend is running on
+    origin: 'http://localhost:5173', 
+    credentials: true,
+  }));
+  
 app.use('/api/products', productsRoutes)
 
 app.use(notFound)

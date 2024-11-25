@@ -1,0 +1,1 @@
+https://dev.to/debosthefirst/how-to-setup-redux-toolkit-with-typescript-19g3

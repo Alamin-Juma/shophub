@@ -1,0 +1,116 @@
+import React from "react";
+import { Row, Col } from "react-bootstrap";
+import Products from "../components/Products";
+import { useGetProductsQuery } from "../slices/productsApiSlice";
+
+const HomeScreen = () => {
+  const { data: products, isLoading, error } = useGetProductsQuery();
+
+  return (
+    <>
+      {isLoading ? (
+        <h2>Loading...</h2>
+      ) : error ? (
+        <h2>Error: {error.message || "Something went wrong"}</h2>
+      ) : (
+        <>
+          <h1>Latest Products</h1>
+          <Row>
+            {products?.map((product) => (
+              <Col key={product._id} sm={12} md={6} lg={4} xl={3}>
+                <Products product={product} />
+              </Col>
+            ))}
+          </Row>
+        </>
+      )}
+    </>
+  );
+};
+
+export default HomeScreen;
+
+Property 'error and data' does not exist on type 'FetchBaseQueryError | SerializedError'. Property 'error' does not exist on type '
+
+The error suggests a mismatch in how the error object from useGetProductsQuery is being handled. In RTK Query, the error property could be of multiple types:
+
+FetchBaseQueryError - This occurs when the API request fails due to network or HTTP errors (e.g., 4xx or 5xx responses).
+SerializedError - This occurs for client-side runtime issues, like coding errors.
+To fix the issue and properly handle the error object, update the code to explicitly check and render the error message based on its structure. Here's the updated component:
+The main issue was that RTK Query's error can be either a FetchBaseQueryError or a SerializedError, and TypeScript needs help to determine which type it is and what properties are available.
+The type guards help TypeScript understand:
+
+If the error is a FetchBaseQueryError (has a status property)
+If the error has a data.message structure
+How to safely access the error message regardless of the error type
+
+This pattern is reusable across your application for consistent error handling with RTK Query. Would you like me to explain any part of the implementation in more detail?
+
+import React from "react";
+import { Row, Col } from "react-bootstrap";
+import Products from "../components/Products";
+import { useGetProductsQuery } from "../slices/productsApiSlice";
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { SerializedError } from '@reduxjs/toolkit';
+
+// Type guard to check if error is FetchBaseQueryError
+function isFetchBaseQueryError(
+  error: FetchBaseQueryError | SerializedError
+): error is FetchBaseQueryError {
+  return 'status' in error;
+}
+
+// Type guard to check if we have a specific error message
+function isErrorWithMessage(
+  error: unknown
+): error is { data: { message: string } } {
+  return (
+    typeof error === 'object' &&
+    error != null &&
+    'data' in error &&
+    typeof (error as any).data?.message === 'string'
+  );
+}
+
+const HomeScreen = () => {
+  const { data: products, isLoading, error } = useGetProductsQuery();
+
+  // Helper function to get error message
+  const getErrorMessage = (error: FetchBaseQueryError | SerializedError) => {
+    if (isFetchBaseQueryError(error)) {
+      // you can access all properties of `FetchBaseQueryError` here
+      if (isErrorWithMessage(error)) {
+        return error.data.message;
+      } else if ('error' in error) {
+        return error.error;
+      }
+    } else {
+      // you can access all properties of `SerializedError` here
+      return error.message;
+    }
+    return 'An error occurred';
+  };
+
+  return (
+    <>
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : error ? (
+        <div>Error: {getErrorMessage(error)}</div>
+      ) : (
+        <>
+          <h1>Latest Products</h1>
+          <Row>
+            {products?.map((product) => (
+              <Col key={product.id} sm={12} md={6} lg={4} xl={3}>
+                <Products product={product} />
+              </Col>
+            ))}
+          </Row>
+        </>
+      )}
+    </>
+  );
+};
+
+export default HomeScreen;
