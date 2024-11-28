@@ -5,6 +5,7 @@ import HomeScreen from './screens/HomeScreen';
 import ProductScreen from './screens/ProductScreen';
 import ErrorPage from './components/errors/ErrorPage';
 import NotFoundPage from './screens/NotFoundPage';
+import CartScreen from './screens/CartScreen';
 
 
 const router = createBrowserRouter([
@@ -16,6 +17,8 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomeScreen /> },
       { path: 'product/:id', element: <ProductScreen /> },
+      { path: '/cart', element: <CartScreen /> },
+
       // Catch-all for 404s
       { path: '*', element: <NotFoundPage /> }, 
     ],

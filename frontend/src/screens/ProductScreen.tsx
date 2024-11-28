@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import {
   Row,
@@ -16,18 +16,25 @@ import Rating from "../components/Rating";
 // import axios from "axios";
 // import { Product } from "../utils/types/product_Type";
 import { useGetSingleProductQuery } from "../slices/productsApiSlice";
-import { useErrorHandler } from "../utils/errorHelpers";
+import { useErrorHandler } from "../utils/helpers/errorHelpers";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../slices/cartSlice";
+import { CartItem } from "../utils/types/cartItems_types";
+import { ProductParams } from "../utils/types/product_params";
 
-type ProductParams = {
-  id: string;
-};
+
 
 const ProductScreen = () => {
   const [qty, setQty] = useState(1);
+  const [localError, setLocalError] = useState<string | null>(null); // Renamed
+
 
   const { id: productId } = useParams<ProductParams>();
+
+  const dispatch  = useDispatch()
+  const navigate = useNavigate()
 
   const {
     data: product,
@@ -35,6 +42,28 @@ const ProductScreen = () => {
     error,
   } = useGetSingleProductQuery(productId || "");
 
+  const addToCartHandler = () => {
+    if (!product) {
+      setLocalError("Product is undefined");
+      return;
+    }
+  
+    const cartItem: CartItem = { 
+      ...product, 
+       // Ensure `qty` is coming from state or props
+      quantity: qty
+    };
+  
+    try {
+      dispatch(addToCart(cartItem));
+      navigate('/cart');
+      setLocalError(null);
+    } catch (err) {
+      setLocalError("Failed to add product to cart");
+    }
+  };
+  
+  
   const { handleError } = useErrorHandler();
 
   // If product is not found or is out of stock, disable the button and quantity
@@ -42,10 +71,12 @@ const ProductScreen = () => {
 
   return (
     <>
-      {isLoading ? (
+     {isLoading ? (
         <Loader />
       ) : error ? (
         <Message variant="danger">Error: {handleError(error)}</Message>
+      ) : localError ? ( // Render local error if present
+        <Message variant="danger">{localError}</Message>
       ) : (
         <>
               <Message >Single products page </Message>
@@ -107,6 +138,7 @@ const ProductScreen = () => {
                             value={qty}
                             onChange={(e) => setQty(Number(e.target.value))}
                           >
+                            {/* prevent the use to input more than the ones in stock, so since array starts from zero, we add 1 to the key and index*/}
                             {[...Array(product?.countInStock).keys()].map(
                               (x) => (
                                 <option key={x + 1} value={x + 1}>
@@ -125,6 +157,7 @@ const ProductScreen = () => {
                       className="btn-block"
                       type="button"
                       disabled={isOutOfStock} // Disable button if out of stock
+                      onClick={ addToCartHandler}
                     >
                       Add To Cart
                     </Button>
