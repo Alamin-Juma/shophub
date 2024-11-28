@@ -1,7 +1,7 @@
 import { Row, Col } from "react-bootstrap";
 import Products from "../components/Products";
 import { useGetProductsQuery } from "../slices/productsApiSlice";
-import { useErrorHandler } from "../utils/errorHelpers";
+import { useErrorHandler } from "../utils/helpers/errorHelpers";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
 
