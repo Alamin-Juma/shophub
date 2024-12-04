@@ -1,1 +1,2 @@
 # shophub
+# sequalize
