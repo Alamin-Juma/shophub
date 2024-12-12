@@ -1,8 +1,8 @@
 import asyncHandler from "../middlewares/asyncHandler";
 import { Request, Response, NextFunction } from "express"
 import dotenv from 'dotenv'
-import User from "../models/userModel";
-import jwt from 'jsonwebtoken'
+import User, { IUser } from "../models/userModel";
+import generateToken from "../utils/helpers/generateToken";
 
 dotenv.config()
 
@@ -11,27 +11,14 @@ dotenv.config()
 //@access Public 
 const authUser = asyncHandler(async (req: Request, res: Response) => {
     // console.log(req.body)
-    const {email, password} = req.body
+    const { email, password } = req.body
 
-    const user = await User.findOne({email})
+    const user = await User.findOne({ email })
 
-    if(user && (await user.matchPassword(password))) {
-        if (!process.env.JWT_SECRET) {
-            throw new Error("JWT_SECRET is not defined in the environment variables");
-          }
-          const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET as string, {
-            expiresIn: '30d',
-          });
-          
+    if (user && (await user.matchPassword(password))) {
 
-        //set JWT as HTTP-Only cookie
-        res.cookie('jwt', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV !== 'development',
-            sameSite: 'strict', // Use 'strict', 'lax', or 'none' as per your requirement
-            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-          });
-          
+        generateToken(res, user._id.toString());
+
         res.json({
             _id: user._id,
             name: user.name,
@@ -50,14 +37,47 @@ const authUser = asyncHandler(async (req: Request, res: Response) => {
 //@route POST /api/users/
 //@access Public 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
-    res.json('register user')
+    const { name, email, password } = req.body
+
+    const userExists = await User.findOne({ email })
+
+    if (userExists) {
+        res.status(400)
+        throw new Error('User alredy  exists')
+    }
+
+    const user = await User.create({
+        name,
+        email,
+        password
+    })
+
+    if (user) {
+
+        generateToken(res, user._id.toString());
+
+        res.status(201).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            isAdmin: user.isAdmin,
+        })
+    } else {
+        res.status(400)
+        throw new Error('Invalid user data')
+    }
 })
 
 //@desc    Logout user / clear cookie
 //@route POST /api/users/login
 //@access Private 
 const logoutUser = asyncHandler(async (req: Request, res: Response) => {
-    res.json('logout user')
+    res.cookie('jwt', '', {
+        httpOnly: true,
+        expires: new Date(0)
+    })
+
+    res.status(200).json({ message: 'Logged out successfully' })
 })
 
 
@@ -65,7 +85,26 @@ const logoutUser = asyncHandler(async (req: Request, res: Response) => {
 //@route GET  /api/users/profile
 //@access Private 
 const getUserProfile = asyncHandler(async (req: Request, res: Response) => {
-    res.json('get user profile')
+    // Type guard to ensure user exists
+    const reqUser = (req as Request & { user?: IUser }).user
+    if (!reqUser) {
+        res.status(401);
+        throw new Error('Not authorized');
+    }
+
+    const user = await User.findById(reqUser._id);
+
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    } else {
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            isAdmin: user.isAdmin
+        });
+    }
 })
 
 
@@ -73,9 +112,46 @@ const getUserProfile = asyncHandler(async (req: Request, res: Response) => {
 //@route PUT  /api/users/profile
 //@access Private 
 const updateUserProfile = asyncHandler(async (req: Request, res: Response) => {
-    res.json('update user profile')
-})
-
+    const reqUser = (req as Request & { user?: IUser }).user;
+    
+    if (!reqUser) {
+        res.status(401);
+        throw new Error("Not authorized");
+    }
+    
+    const user = await User.findById(reqUser._id);
+    
+    if (!user) {
+        res.status(404);
+        throw new Error("User not found");
+    }
+    
+    console.log("User before update:", user);
+    
+    // Update name and email
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    
+    // Only update password if provided
+    if (req.body.password) {
+        console.log("Updating password");
+        user.password = req.body.password; // Set the new password
+        await user.save(); // Save the user to trigger the pre-save hook
+    } else {
+        await user.save(); // Save the user without updating the password
+    }
+    
+    const updatedUser = await User.findById(reqUser._id);
+    
+    console.log("User after update:", updatedUser);
+    
+    res.json({
+        _id: updatedUser?._id,
+        name: updatedUser?.name,
+        email: updatedUser?.email,
+        isAdmin: updatedUser?.isAdmin,
+    });
+});
 //@desc    Get Users
 //@route GET  /api/users
 //@access Private/Admin
@@ -108,7 +184,7 @@ const updateUser = asyncHandler(async (req: Request, res: Response) => {
 })
 
 
-export { 
+export {
     authUser,
     registerUser,
     logoutUser,
