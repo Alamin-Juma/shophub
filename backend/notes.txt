@@ -1,0 +1,54 @@
+Why notFound Middleware Didn't Catch It
+Mongoose CastError Happens During Database Query
+When you call Product.findById(id), Mongoose tries to convert the id to an ObjectId. If the string cannot be converted (e.g., "1"), Mongoose throws a CastError before the code even reaches the if (product) check.
+
+Custom Middleware Order
+The notFound middleware is designed to handle routes that are not defined (i.e., no matching route handler). It doesn't catch database-level validation errors like CastError.
+
+Error Handling Middleware Works After Errors Are Thrown
+The error handler (errorHandler) will catch and process errors like the CastError. However, the default response message for a CastError is not helpful ("Cast to ObjectId failed..."). This is why you should handle such errors explicitly.
+
+Solution: Catch and Handle CastError Explicitly
+You can add custom handling for CastError in your errorHandler middleware:
+const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+  let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  let message = err.message;
+
+  // Handle Mongoose-specific errors
+  if ((err as any).name === "CastError" && (err as any).kind === "ObjectId") {
+    statusCode = 404; // Not Found
+    message = "Resource not found: Invalid ObjectId";
+  }
+
+  res.status(statusCode).json({
+    message,
+    stack: process.env.NODE_ENV === "production" ? "🥞" : err.stack,
+  });
+};
+
+
+Updated Route Handler for Product by ID
+To avoid throwing unhandled CastError errors, add a check for the validity of the id parameter before querying the database. You can use Mongoose's isValidObjectId method:
+import mongoose from "mongoose";
+
+router.get(
+  '/:id',
+  asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+
+    // Check if id is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(404); // Not Found
+      throw new Error("Resource not found: Invalid ID");
+    }
+
+    const product = await Product.findById(id);
+
+    if (product) {
+      res.json(product);
+    } else {
+      res.status(404);
+      throw new Error("Resource not found");
+    }
+  })
+);
